@@ -1,0 +1,441 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="default">
+<meta name="apple-mobile-web-app-title" content="Congregación">
+<meta name="theme-color" content="#ffffff">
+<title>Programa Semanal — Congregación</title>
+<style>
+  :root {
+    --bg: #ffffff;
+    --bg2: #f5f5f3;
+    --bg3: #efefed;
+    --text: #1a1a18;
+    --text2: #6b6b67;
+    --text3: #9b9b96;
+    --border: rgba(0,0,0,0.1);
+    --border2: rgba(0,0,0,0.18);
+    --accent: #3b5998;
+    --accent-bg: #eef1f8;
+    --accent-text: #1e3a7a;
+    --radius: 12px;
+    --radius-sm: 8px;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root {
+      --bg: #1c1c1e;
+      --bg2: #2c2c2e;
+      --bg3: #3a3a3c;
+      --text: #f2f2f7;
+      --text2: #aeaeb2;
+      --text3: #636366;
+      --border: rgba(255,255,255,0.1);
+      --border2: rgba(255,255,255,0.18);
+      --accent: #6d8fe8;
+      --accent-bg: #1e2a4a;
+      --accent-text: #a8bff0;
+    }
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body {
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+    background: var(--bg);
+    color: var(--text);
+    font-size: 15px;
+    line-height: 1.5;
+    max-width: 680px;
+    margin: 0 auto;
+    padding: 0 0 40px;
+  }
+  header {
+    background: var(--bg);
+    border-bottom: 0.5px solid var(--border);
+    padding: 16px 20px 12px;
+    position: sticky;
+    top: 0;
+    z-index: 10;
+  }
+  header h1 {
+    font-size: 18px;
+    font-weight: 600;
+    color: var(--text);
+    margin-bottom: 10px;
+  }
+  .week-nav {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+  .week-nav button {
+    background: var(--bg2);
+    border: 0.5px solid var(--border);
+    border-radius: var(--radius-sm);
+    padding: 7px 14px;
+    font-size: 14px;
+    cursor: pointer;
+    color: var(--text);
+    font-weight: 500;
+  }
+  .week-nav button:active { opacity: 0.7; }
+  .week-label {
+    flex: 1;
+    text-align: center;
+    font-size: 13px;
+    font-weight: 500;
+    color: var(--text2);
+  }
+  .btn-hoy {
+    background: var(--accent-bg) !important;
+    color: var(--accent-text) !important;
+    border-color: transparent !important;
+    font-size: 13px !important;
+  }
+  main { padding: 16px 16px 0; }
+  .section { margin-bottom: 20px; }
+  .section-title {
+    font-size: 11px;
+    font-weight: 600;
+    color: var(--text3);
+    text-transform: uppercase;
+    letter-spacing: 0.07em;
+    margin-bottom: 8px;
+    padding: 0 4px;
+  }
+  .card {
+    background: var(--bg2);
+    border-radius: var(--radius);
+    overflow: hidden;
+    margin-bottom: 8px;
+  }
+  .card-header {
+    padding: 12px 14px 8px;
+    border-bottom: 0.5px solid var(--border);
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+  }
+  .card-day {
+    font-size: 13px;
+    font-weight: 600;
+    color: var(--accent);
+  }
+  .card-date {
+    font-size: 12px;
+    color: var(--text3);
+  }
+  .card-body { padding: 4px 0; }
+  .row {
+    display: flex;
+    align-items: baseline;
+    padding: 8px 14px;
+    gap: 10px;
+    border-bottom: 0.5px solid var(--border);
+  }
+  .row:last-child { border-bottom: none; }
+  .row-label {
+    font-size: 12px;
+    color: var(--text2);
+    min-width: 110px;
+    flex-shrink: 0;
+  }
+  .row-value {
+    font-size: 14px;
+    font-weight: 500;
+    color: var(--text);
+    flex: 1;
+  }
+  .row-sub {
+    font-size: 12px;
+    color: var(--text2);
+    margin-top: 1px;
+  }
+  .pres-badge {
+    display: inline-block;
+    background: var(--accent-bg);
+    color: var(--accent-text);
+    font-size: 12px;
+    font-weight: 600;
+    padding: 3px 9px;
+    border-radius: 20px;
+  }
+  .titulo-disc {
+    font-size: 15px;
+    font-weight: 500;
+    color: var(--text);
+    padding: 12px 14px 6px;
+    line-height: 1.4;
+  }
+  .parte-row {
+    padding: 8px 14px;
+    border-bottom: 0.5px solid var(--border);
+  }
+  .parte-row:last-child { border-bottom: none; }
+  .parte-rol {
+    font-size: 12px;
+    color: var(--text2);
+    margin-bottom: 2px;
+  }
+  .parte-quien {
+    font-size: 14px;
+    font-weight: 500;
+    color: var(--text);
+  }
+  .sala-tag {
+    display: inline-block;
+    background: var(--bg3);
+    color: var(--text2);
+    font-size: 11px;
+    padding: 3px 8px;
+    border-radius: 6px;
+    margin: 8px 14px 4px;
+  }
+  .no-data {
+    text-align: center;
+    color: var(--text3);
+    font-size: 14px;
+    padding: 24px 0;
+    font-style: italic;
+  }
+  .grid2 {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 0;
+  }
+  .grid2 .row { border-right: 0.5px solid var(--border); }
+  .grid2 .row:nth-child(even) { border-right: none; }
+  @media (max-width: 400px) {
+    .row-label { min-width: 90px; font-size: 11px; }
+    .row-value { font-size: 13px; }
+  }
+</style>
+</head>
+<body>
+
+<header>
+  <h1>⛪ Programa Semanal</h1>
+  <div class="week-nav">
+    <button onclick="changeWeek(-1)">‹ Ant</button>
+    <span class="week-label" id="week-label"></span>
+    <button class="btn-hoy" onclick="goToday()">Hoy</button>
+    <button onclick="changeWeek(1)">Sig ›</button>
+  </div>
+</header>
+
+<main id="content"></main>
+
+<script>
+const discursos = [
+  {d:"2026-01-03", titulo:"Como nos beneficia la sabiduría divina", conf:"Pablo Becker — Sur G.Pico — Conf N°194", salen:"Mauro Tobares Conf N°87 G.Acha / N.Fernandez N°178 Realicó"},
+  {d:"2026-01-10", titulo:"Hagamos el bien a todos", conf:"Braian Ardonahim — Norte S.Rosa — Conf N°15", salen:"L. Zorrilla E.S.Rosa Conf N°49 / E.Acosta Conf N°68 Realicó"},
+  {d:"2026-01-17", titulo:"STREAM", conf:"STREAM", salen:""},
+  {d:"2026-01-24", titulo:"Está la verdad transformando su vida?", conf:"Ezequiel Olivieri — Conf N°51 — N.S.Rosa", salen:""},
+  {d:"2026-01-31", titulo:"Confía usted en la ciencia o en la Biblia?", conf:"Joaquin Pundan — Int.Alvear — Conf N°80", salen:"Mario Farias — Este S.Rosa — Conf N°148"},
+  {d:"2026-02-07", titulo:"Estamos al tanto de nuestras necesidades espirituales?", conf:"David Medina — Trenque Lauquen — Conf N°31", salen:"Mauro Tobares — Trenque Lauquen"},
+  {d:"2026-02-14", titulo:"VISITA: ABEL DOMINGUEZ", conf:"", salen:""},
+  {d:"2026-02-21", titulo:"A encontrado usted una perla muy valiosa?", conf:"Alfredo Vega — Realicó — Conf N°24", salen:"Emanuel Espinal — Conf N°166 — N.S.Rosa"},
+  {d:"2026-02-28", titulo:"Por qué es importante mostrar amor desinteresado?", conf:"Carlos Guette — Int.Alvear — Conf N°69", salen:""},
+  {d:"2026-03-07", titulo:"Que clase de reputación se está haciendo con Dios?", conf:"Gaston Bugnone — Conf N°55 — Este G.Pico", salen:"Luis Zorrilla Norte Sta Rosa conf. N°177"},
+  {d:"2026-03-14", titulo:"Utilice la educación para alabar a Jehová", conf:"Ariel La Puente — Conf N°146 — E.S.Rosa", salen:"Mariano Soto / Mario Farias — Trenque Lauquen"},
+  {d:"2026-03-21", titulo:"Apreciemos las maravillas de la creación de Dios", conf:"Jose Prelato — Conf N°114 — Realicó", salen:"Diego Reinoso — E.S.Rosa / Enzo Acosta — G.Acha Conf N°194"},
+  {d:"2026-03-28", titulo:"CONF. ESPECIAL", conf:"Emanuel Espinal", salen:""},
+  {d:"2026-04-04", titulo:"Medite en la palabra de Jehová y su creación", conf:"Pablo Juarez — Trenque Lauquen — Conf N°67", salen:"Emanuel Espinal / Mario Farias — G.Acha Conf N°148"},
+  {d:"2026-04-11", titulo:"Como podemos ser pacíficos en un mundo violento?", conf:"Juan Llanos — E.S.Rosa — Conf N°65", salen:"Natanael Arake — Macachin"},
+  {d:"2026-04-18", titulo:"ASAMBLEA", conf:"", salen:""},
+  {d:"2026-04-25", titulo:"Haga de Jehová su fortaleza", conf:"Sergio Monserrat — Toay — Conf N°18", salen:"Mariano Soto — G.Acha — Conf N°55 / Luis Zorrilla — Trenque Lauquen conf. N°76"},
+  {d:"2026-05-02", titulo:"A quien podemos acudir en tiempos de angustia", conf:"Cristian Diaz — G.Acha — Conf N°177", salen:"Mauro Tobares Conf N°24 Toay / Luis Zorrilla — T.Lauquen Conf N°76"},
+  {d:"2026-05-09", titulo:"", conf:"Oscar Gonzales — Trenque Lauquen", salen:"Mariano Soto — Trenque Lauquen"},
+  {d:"2026-05-16", titulo:"Porque andar en el camino de Dios?", conf:"Fabián Filips — Trenque Lauquen — Conf N°37", salen:"Enzo Acosta — Trenque Lauquen"},
+  {d:"2026-05-23", titulo:"Avancemos con la organización unida de Jehová", conf:"Gabriel Fernandez — Trenque Lauquen — N°3", salen:"Mariano Soto — Toay — Conf N°55"},
+  {d:"2026-05-30", titulo:"Seamos valerosos y confiemos en Jehová", conf:"Oscar Briguez — S.S.Rosa — Conf N°158", salen:"Diego Reinoso — Toay / Mauro Tobares — E.S.Rosa Conf N°87"},
+  {d:"2026-06-06", titulo:"Pueden los principios bíblicos ayudarnos a afrontar los problemas de nuestro tiempo", conf:"Luis Zorrilla — S.S.Rosa — Conf N°76", salen:"Jonathan Zurita — Toay Conf N°53 / Mauro Tobares — Norte S.Rosa"},
+  {d:"2026-06-13", titulo:"Sigan perdonándose con generosidad", conf:"Eduardo Schneider — Toay — Conf N°68", salen:""},
+  {d:"2026-06-20", titulo:"Jehová está pendiente de nosotros", conf:"Carlos Bragini — Trenque Lauquen — Conf N°74", salen:""},
+  {d:"2026-06-27", titulo:"Cómo ser verdaderamente felices", conf:"Camilo Saavedra — Victorica — Conf N°103", salen:""},
+];
+
+const turnos = [
+  {fecha:"2026-04-01", dia:"Miércoles", lector:"FLORES DANIEL", sonido:"Araque Natanael / Dadam Milton", plat:"López Javier", mic:"Zurita Pablo / Oberts Fernando", acAud:"Sanchez Andres", acEnt:"Fernandez Nelson", pres:"", rev:"Busto Rodrigo", pub:"Nuñez Armando"},
+  {fecha:"2026-04-04", dia:"Sábado", lector:"SCALESE EDUARDO", sonido:"Nuñez Armando / Flores Daniel", plat:"Dadam Milton", mic:"Lopez Manuel / Rodríguez Jaziel", acAud:"Villatoro Felix", acEnt:"Busto Oscar", pres:"ZURITA JONATHAN", rev:"Gil Walther", pub:"Busto Rodrigo"},
+  {fecha:"2026-04-08", dia:"Miércoles", lector:"LOPEZ MANUEL", sonido:"Reynoso Diego / Orellana Misael", plat:"Busto Benjamin", mic:"Lucero Bruno / Soto Mariano", acAud:"Bravo Jorge", acEnt:"", pres:"", rev:"Nuñez Armando", pub:"Caro Jorge"},
+  {fecha:"2026-04-11", dia:"Sábado", lector:"ORELLANA MISAEL", sonido:"Flores Daniel / Oberts Benjamín", plat:"Lucero Bruno", mic:"Oberts Ariel / López Javier", acAud:"Oberts Fernando", acEnt:"Nuñez Armando", pres:"FARÍAS MARIO", rev:"Caro Jorge", pub:"Scalece Eduardo"},
+  {fecha:"2026-04-15", dia:"Miércoles (Semana Asamblea)", lector:"", sonido:"Hernández Pablo / Reynoso Diego", plat:"Oberts Ariel", mic:"Oberts Fernando / Busto Benjamin", acAud:"", acEnt:"", pres:"", rev:"Busto Rodrigo", pub:"Gil Walther"},
+  {fecha:"2026-04-18", dia:"Sábado (Asamblea)", lector:"", sonido:"Oberts Benjamín / Hernández Pablo", plat:"Carrizo Maximiliano", mic:"Hernández Pablo / Dadam Milton", acAud:"", acEnt:"", pres:"SOTO MARIANO", rev:"Nuñez Armando", pub:"López Manuel"},
+  {fecha:"2026-04-22", dia:"Miércoles", lector:"BUSTO OSCAR", sonido:"Orellana Misael / Nuñez Armando", plat:"Dadam Milton", mic:"Oberts Benjamín / Misael Alvarez", acAud:"Caro Jorge", acEnt:"Farias Mario", pres:"", rev:"Lasierra Jose Luis", pub:"Busto Rodrigo"},
+  {fecha:"2026-04-25", dia:"Sábado", lector:"FLORES DANIEL", sonido:"Dadam Milton / Araque Natanael", plat:"Manzo Nazareno", mic:"Rodriguez Carlos / Rodríguez Jaziel", acAud:"Gil Walther", acEnt:"Espinal Emanuel", pres:"REINOSO DIEGO", rev:"López Manuel", pub:"Lasierra Jose Luis"},
+  {fecha:"2026-04-29", dia:"Miércoles", lector:"ARAQUE NATANAEL", sonido:"Nuñez Armando / Flores Daniel", plat:"López Javier", mic:"Oberts Fernando / Zurita Pablo", acAud:"Scalece Eduardo", acEnt:"Zurita Jonathan", pres:"", rev:"Flores Daniel", pub:"Nuñez Armando"},
+  {fecha:"2026-05-02", dia:"Sábado", lector:"BRAVO JORGE", sonido:"Araque Natanael / Orellana Misael", plat:"Misael Alvarez", mic:"Rodríguez Jaziel / Lopez Manuel", acAud:"Hernández Pablo", acEnt:"Briguez Oscar", pres:"BRAVO JORGE", rev:"Gil Walther", pub:"Busto Rodrigo"},
+  {fecha:"2026-05-06", dia:"Miércoles", lector:"SCALESE EDUARDO", sonido:"Flores Daniel / Oberts Benjamín", plat:"Busto Benjamin", mic:"Lucero Bruno / Carrizo Maximiliano", acAud:"Bravo Jorge", acEnt:"Reynoso Diego", pres:"", rev:"Scalece Eduardo", pub:"Caro Jorge"},
+  {fecha:"2026-05-09", dia:"Sábado", lector:"BUSTO OSCAR", sonido:"Orellana Misael / Hernández Pablo", plat:"Lucero Bruno", mic:"López Javier / Flores Daniel", acAud:"Caro Jorge", acEnt:"Zorrilla Luis", pres:"NIETO NATANAEL", rev:"Caro Jorge", pub:"Scalece Eduardo"},
+  {fecha:"2026-05-13", dia:"Miércoles", lector:"LÓPEZ MANUEL", sonido:"Oberts Benjamín / Dadam Milton", plat:"Oberts Ariel", mic:"Busto Benjamin / Hernández Pablo", acAud:"Zorrilla Luis", acEnt:"Oberts Fernando", pres:"", rev:"Busto Rodrigo", pub:"Gil Walther"},
+  {fecha:"2026-05-16", dia:"Sábado", lector:"ORELLANA MISAEL", sonido:"Hernández Pablo / Nuñez Armando", plat:"Carrizo Maximiliano", mic:"Dadam Milton / Zurita Pablo", acAud:"Gil Walter", acEnt:"Reynoso Jose", pres:"ZORRILLA LUIS", rev:"Lasierra José Luis", pub:"Flores Daniel"},
+  {fecha:"2026-05-20", dia:"Miércoles", lector:"BRAVO JORGE", sonido:"Dadam Milton / Flores Daniel", plat:"Busto Benjamin", mic:"Oberts Ariel / Oberts Benjamín", acAud:"Tobares Mauro", acEnt:"Villatoro Félix", pres:"", rev:"Lasierra Jose Luis", pub:"López Manuel"},
+  {fecha:"2026-05-23", dia:"Sábado", lector:"ARAQUE NATANAEL", sonido:"Nuñez Armando / Oberts Benjamín", plat:"Manzo Nazareno", mic:"Pablo Hernández / Rodriguez Carlos", acAud:"Reynoso Diego", acEnt:"GIL WALTER", pres:"RODRIGUEZ CARLOS", rev:"López Manuel", pub:"Gil Walther"},
+  {fecha:"2026-05-27", dia:"Miércoles", lector:"FLORES DANIEL", sonido:"Araque Natanael / Hernández Pablo", plat:"López Javier", mic:"Manzo Nazareno / Oberts Fernando", acAud:"Briguez Oscar", acEnt:"Hernández Pablo", pres:"", rev:"Flores Daniel", pub:"Nuñez Armando"},
+  {fecha:"2026-05-30", dia:"Sábado", lector:"GIL WALTER", sonido:"Flores Daniel / Orellana Misael", plat:"Benjamin Carrizo", mic:"Carrizo Maximiliano / Rodríguez Jaziel", acAud:"Soto Mariano", acEnt:"Scalece Eduardo", pres:"SOTO MARIANO", rev:"Gil Walther", pub:"Busto Rodrigo"},
+  {fecha:"2026-06-03", dia:"Miércoles", lector:"BRAVO JORGE", sonido:"Orellana Misael / Reynoso Diego", plat:"Dadam Milton", mic:"Zurita Pablo / Lucero Bruno", acAud:"Farías Mario", acEnt:"Obert Fernando", pres:"", rev:"Scalece Eduardo", pub:"Caro Jorge"},
+  {fecha:"2026-06-06", dia:"Sábado", lector:"ORELLANA MISAEL", sonido:"Oberts Benjamín / Flores Daniel", plat:"Lucero Bruno", mic:"Lopez Manuel / López Javier", acAud:"Espinal Emanuel", acEnt:"Caro Jorge", pres:"ACOSTA ENZO", rev:"Nuñez Armando", pub:"Lasierra Jose Luis"},
+  {fecha:"2026-06-10", dia:"Miércoles", lector:"SCALESE EDUARDO", sonido:"Hernández Pablo / Nuñez Armando", plat:"Oberts Ariel", mic:"Scalece Eduardo / Busto Benjamin", acAud:"Lasierra J. Luis", acEnt:"Flores Daniel", pres:"", rev:"Busto Rodrigo", pub:"Gil Walther"},
+  {fecha:"2026-06-13", dia:"Sábado", lector:"GIL WALTER", sonido:"Dadam Milton / Reynoso Diego", plat:"Carrizo Maximiliano", mic:"Flores Daniel / Oberts Ariel", acAud:"Nuñez Armando", acEnt:"Lopez Manuel", pres:"REYNOSO JOSÉ", rev:"Caro Jorge", pub:"Flores Daniel"},
+  {fecha:"2026-06-17", dia:"Miércoles", lector:"LÓPEZ MANUEL", sonido:"Nuñez Armando / Araque Natanael", plat:"López Javier", mic:"Gil Walther / Dadam Milton", acAud:"Zurita Jonathan", acEnt:"Oberts Fernando", pres:"", rev:"Lasierra Jose Luis", pub:"López Manuel"},
+  {fecha:"2026-06-20", dia:"Sábado", lector:"FLORES DANIEL", sonido:"Reynoso Diego / Nuñez Armando", plat:"Manzo Nazareno", mic:"Zurita Pablo / Oberts Fernando", acAud:"Hernández Pablo", acEnt:"Orellana Misael", pres:"ESPINAL LORENZO", rev:"López Manuel", pub:"Lasierra Jose Luis"},
+  {fecha:"2026-06-24", dia:"Miércoles", lector:"BRAVO JORGE", sonido:"Flores Daniel / Oberts Benjamín", plat:"Dadam Milton", mic:"Oberts Benjamín / Manzo Nazareno", acAud:"Busto Oscar", acEnt:"Villatoro Felix", pres:"", rev:"Flores Daniel", pub:"Nuñez Armando"},
+];
+
+const reuniones = [
+  {semana:"2026-04-20", salaAux:"Enzo Acosta", partes:[
+    {rol:"Oración inicial", quien:"Manuel Lopez"},
+    {rol:"Palabras de Introducción", quien:"Oscar Briguez"},
+    {rol:"Tesoros — ¿Cuánto está dispuesto a invertir? (10 min)", quien:"Jorge Bravo"},
+    {rol:"Busquemos perlas escondidas (10 min)", quien:"Andres Sanchez"},
+    {rol:"Lectura de la Biblia (4 min) — Sala Principal", quien:"Milton D'adam"},
+    {rol:"Lectura de la Biblia — Sala Auxiliar", quien:"Ariel Oberts"},
+    {rol:"Empiece conversaciones (2 min) DE CASA EN CASA", quien:"Norma Vergaz / Andrea Fernández · Pamela Bueno / Maria Schiel"},
+    {rol:"Empiece conversaciones (2 min) PRED. PÚBLICA", quien:"Pamela Busto / Gisele Hernandez · Alejandra Reynoso / Alejandra Farias"},
+    {rol:"Haga revisitas (2 min) PRED. PÚBLICA", quien:"Ela Busto / Yanel Zurita · Dora Medina / Elizabeth Camarata"},
+    {rol:"Discurso (5 min) — Principal / Auxiliar", quien:"Carlos Rodriguez · Daniel Flores"},
+    {rol:"Ningún obstáculo le impida tener su estudio personal (15 min)", quien:"Luis Zorrilla"},
+    {rol:"Estudio bíblico de la congregación (30 min)", quien:"Enzo Acosta"},
+    {rol:"Repaso y adelanto", quien:"Oscar Briguez"},
+    {rol:"Oración final", quien:"Oscar Briguez"},
+  ]},
+  {semana:"2026-04-27", salaAux:"Enzo Acosta", partes:[
+    {rol:"Oración inicial", quien:"Emmanuel Espinal"},
+    {rol:"Palabras de Introducción", quien:"Jose Reynoso"},
+    {rol:"Tesoros — Felices de tener a Jehová en nuestra vida (10 min)", quien:"Natanael Araque"},
+    {rol:"Busquemos perlas escondidas (10 min)", quien:"Manuel Lopez"},
+    {rol:"Lectura de la Biblia — Sala Principal", quien:"Misael Alvarez"},
+    {rol:"Lectura de la Biblia — Sala Auxiliar", quien:"Stefano Camarata"},
+    {rol:"Empiece conversaciones (3 min) PRED. INFORMAL", quien:"Norma Maidana / Miryam D'adam · Nancy Lucero / Gladys Bazan"},
+    {rol:"Explique sus creencias — Discurso (5 min)", quien:"Walter Gil · Pablo Hernandez"},
+    {rol:"Haga discípulos (4 min)", quien:"Alejandra Oberts / Irma Alday · Victoria Musa / Carina Lucero"},
+    {rol:"Nunca deje de hablar de Jehová (15 min)", quien:"Mariano Soto"},
+    {rol:"Estudio bíblico de la congregación (30 min)", quien:"Mario Farias"},
+    {rol:"Repaso y adelanto", quien:"Jose Reynoso"},
+    {rol:"Oración final", quien:"Jose Reynoso"},
+  ]},
+  {semana:"2026-05-04", salaAux:"", partes:[
+    {rol:"(Sin datos cargados para esta semana)", quien:""},
+  ]},
+  {semana:"2026-05-11", salaAux:"", partes:[
+    {rol:"(Sin datos cargados para esta semana)", quien:""},
+  ]},
+];
+
+function getMondayOf(date) {
+  const d = new Date(date);
+  const day = d.getDay();
+  const diff = day === 0 ? -6 : 1 - day;
+  d.setDate(d.getDate() + diff);
+  d.setHours(0,0,0,0);
+  return d;
+}
+
+function toISO(d) {
+  return d.toISOString().slice(0,10);
+}
+
+function formatWeekShort(mon) {
+  const sun = new Date(mon); sun.setDate(sun.getDate() + 6);
+  const days = ['Dom','Lun','Mar','Mié','Jue','Vie','Sáb'];
+  const months = ['Ene','Feb','Mar','Abr','May','Jun','Jul','Ago','Sep','Oct','Nov','Dic'];
+  return `${mon.getDate()} ${months[mon.getMonth()]} — ${sun.getDate()} ${months[sun.getMonth()]} ${sun.getFullYear()}`;
+}
+
+let currentMonday = getMondayOf(new Date());
+
+function goToday() {
+  currentMonday = getMondayOf(new Date());
+  render();
+}
+
+function changeWeek(dir) {
+  currentMonday = new Date(currentMonday);
+  currentMonday.setDate(currentMonday.getDate() + dir * 7);
+  render();
+}
+
+function render() {
+  const mon = toISO(currentMonday);
+  const sun = new Date(currentMonday); sun.setDate(sun.getDate() + 6);
+  const sunISO = toISO(sun);
+
+  document.getElementById('week-label').textContent = formatWeekShort(currentMonday);
+
+  const discs = discursos.filter(d => d.d >= mon && d.d <= sunISO);
+  const trs = turnos.filter(t => t.fecha >= mon && t.fecha <= sunISO);
+  const reunion = reuniones.find(r => r.semana === mon);
+
+  let html = '';
+
+  // DISCURSO PÚBLICO
+  html += `<div class="section"><div class="section-title">Discurso público</div>`;
+  if (discs.length) {
+    discs.forEach(d => {
+      html += `<div class="card">
+        ${d.titulo ? `<div class="titulo-disc">${d.titulo}</div>` : ''}
+        <div class="card-body">
+          ${d.conf ? `<div class="row"><div class="row-label">Conferenciante</div><div class="row-value">${d.conf}</div></div>` : ''}
+          ${d.salen ? `<div class="row"><div class="row-label">Salen</div><div class="row-value" style="font-weight:400;font-size:13px;">${d.salen}</div></div>` : ''}
+        </div>
+      </div>`;
+    });
+  } else {
+    html += `<div class="card"><div class="no-data">Sin datos para esta semana</div></div>`;
+  }
+  html += `</div>`;
+
+  // TURNOS
+  html += `<div class="section"><div class="section-title">Turnos de servicio</div>`;
+  if (trs.length) {
+    trs.forEach(t => {
+      html += `<div class="card">
+        <div class="card-header">
+          <span class="card-day">${t.dia}</span>
+          <span class="card-date">${t.fecha.split('-').reverse().join('/')}</span>
+        </div>
+        <div class="card-body">
+          ${t.lector ? `<div class="row"><div class="row-label">Lector</div><div class="row-value">${t.lector}</div></div>` : ''}
+          <div class="row"><div class="row-label">Sonido</div><div class="row-value">${t.sonido}</div></div>
+          <div class="row"><div class="row-label">Plataforma</div><div class="row-value">${t.plat}</div></div>
+          <div class="row"><div class="row-label">Micrófonos</div><div class="row-value">${t.mic}</div></div>
+          <div class="row"><div class="row-label">Ac. auditorio</div><div class="row-value">${t.acAud || '—'}</div></div>
+          ${t.acEnt ? `<div class="row"><div class="row-label">Ac. entrada</div><div class="row-value">${t.acEnt}</div></div>` : ''}
+          ${t.pres ? `<div class="row"><div class="row-label">Presidente</div><div class="row-value"><span class="pres-badge">${t.pres}</span></div></div>` : ''}
+          <div class="row"><div class="row-label">Revistas</div><div class="row-value">${t.rev}</div></div>
+          <div class="row"><div class="row-label">Publicaciones</div><div class="row-value">${t.pub}</div></div>
+        </div>
+      </div>`;
+    });
+  } else {
+    html += `<div class="card"><div class="no-data">Sin datos de turnos para esta semana</div></div>`;
+  }
+  html += `</div>`;
+
+  // VIDA Y MINISTERIO
+  html += `<div class="section"><div class="section-title">Reunión vida y ministerio</div>`;
+  if (reunion) {
+    html += `<div class="card">
+      ${reunion.salaAux ? `<span class="sala-tag">Sala auxiliar: ${reunion.salaAux}</span>` : ''}
+      <div class="card-body">`;
+    reunion.partes.forEach(p => {
+      html += `<div class="parte-row">
+        <div class="parte-rol">${p.rol}</div>
+        ${p.quien ? `<div class="parte-quien">${p.quien}</div>` : ''}
+      </div>`;
+    });
+    html += `</div></div>`;
+  } else {
+    html += `<div class="card"><div class="no-data">Sin datos de reunión para esta semana</div></div>`;
+  }
+  html += `</div>`;
+
+  document.getElementById('content').innerHTML = html;
+}
+
+render();
+</script>
+</body>
+</html>
