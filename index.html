@@ -481,7 +481,7 @@ async function actualizarDesdeDrive() {
 }
 
 function parsearCSV(text) {
-  const lines = text.split('\n');
+  const lines = text.replace(/\r\n/g,'\n').replace(/\r/g,'\n').split('\n');
   return lines.map(line => {
     const cells = []; let cur = ''; let inQ = false;
     for (let ch of line) {
@@ -494,13 +494,17 @@ function parsearCSV(text) {
   });
 }
 
+function limpiar(str) {
+  return (str||'').replace(/\t/g,' ').replace(/\s+/g,' ').trim();
+}
+
 function parseDate(str) {
   if (!str) return null;
-  const s = str.replace(/['"]/g,'').trim();
-  const m1 = s.match(/(\d{1,2})[\/\-](\d{1,2})[\/\-](\d{2,4})/);
-  if (m1) {
-    const y = m1[3].length === 2 ? '20' + m1[3] : m1[3];
-    return `${y}-${m1[2].padStart(2,'0')}-${m1[1].padStart(2,'0')}`;
+  const s = limpiar(str);
+  const m = s.match(/(\d{1,2})\s*[\/\-]\s*(\d{1,2})\s*[\/\-]\s*(\d{2,4})/);
+  if (m) {
+    const y = m[3].length === 2 ? '20' + m[3] : m[3];
+    return `${y}-${m[2].padStart(2,'0')}-${m[1].padStart(2,'0')}`;
   }
   return null;
 }
@@ -509,12 +513,13 @@ function parsearDiscursos(csv) {
   const rows = parsearCSV(csv);
   const nuevos = [];
   for (const row of rows) {
-    const fecha = parseDate(row[0]);
+    const rawFecha = limpiar(row[0]||'');
+    const fecha = parseDate(rawFecha);
     if (!fecha) continue;
-    const titulo = (row[1]||'').replace(/['"]/g,'').trim();
-    const conf = (row[2]||'').replace(/['"]/g,'').trim();
-    const salen = (row[3]||'').replace(/['"]/g,'').trim();
-    if (titulo || conf) nuevos.push({d:fecha, titulo, conf, salen});
+    const titulo = limpiar(row[1]||'');
+    const conf   = limpiar(row[2]||'');
+    const salen  = limpiar(row[3]||'');
+    nuevos.push({d:fecha, titulo, conf, salen});
   }
   if (nuevos.length > 0) discursos = nuevos;
 }
@@ -524,23 +529,23 @@ function parsearTurnos(csv) {
   const nuevos = [];
   for (const row of rows) {
     if (row.length < 5) continue;
-    const rawFecha = (row[0]||'').replace(/['"]/g,'').trim();
+    const rawFecha = limpiar(row[0]||'');
     if (!rawFecha.match(/\d/)) continue;
     const fecha = parseDate(rawFecha);
     if (!fecha) continue;
     const diaRaw = rawFecha.toLowerCase();
-    const dia = diaRaw.includes('sáb') || diaRaw.includes('sab') || diaRaw.includes('4') || diaRaw.includes('25') ? 'Sábado' : 'Miércoles';
+    const dia = (diaRaw.includes('s\u00e1b') || diaRaw.includes('sab')) ? 'S\u00e1bado' : 'Mi\u00e9rcoles';
     nuevos.push({
       fecha, dia,
-      lector: (row[1]||'').replace(/['"]/g,'').trim(),
-      sonido: [(row[2]||''),(row[3]||'')].map(s=>s.replace(/['"]/g,'').trim()).filter(Boolean).join(' / '),
-      plat:   (row[4]||'').replace(/['"]/g,'').trim(),
-      mic:    [(row[5]||''),(row[6]||'')].map(s=>s.replace(/['"]/g,'').trim()).filter(Boolean).join(' / '),
-      acAud:  (row[7]||'').replace(/['"]/g,'').trim(),
-      acEnt:  (row[8]||'').replace(/['"]/g,'').trim(),
-      pres:   (row[9]||'').replace(/['"]/g,'').trim(),
-      rev:    (row[10]||'').replace(/['"]/g,'').trim(),
-      pub:    (row[11]||'').replace(/['"]/g,'').trim(),
+      lector: limpiar(row[1]||''),
+      sonido: [limpiar(row[2]||''), limpiar(row[3]||'')].filter(Boolean).join(' / '),
+      plat:   limpiar(row[4]||''),
+      mic:    [limpiar(row[5]||''), limpiar(row[6]||'')].filter(Boolean).join(' / '),
+      acAud:  limpiar(row[7]||''),
+      acEnt:  limpiar(row[8]||''),
+      pres:   limpiar(row[9]||''),
+      rev:    limpiar(row[10]||''),
+      pub:    limpiar(row[11]||''),
     });
   }
   if (nuevos.length > 0) turnos = nuevos;
@@ -548,30 +553,57 @@ function parsearTurnos(csv) {
 
 function parsearReunion(csv) {
   const rows = parsearCSV(csv);
+  const meses = {enero:1,febrero:2,marzo:3,abril:4,mayo:5,junio:6,
+                 julio:7,agosto:8,septiembre:9,octubre:10,noviembre:11,diciembre:12};
   const map = {};
+  let currentKey = null;
+  let salaAuxGlobal = '';
+
   for (const row of rows) {
-    const semanaID = (row[3]||'').replace(/['"]/g,'').trim();
-    if (!semanaID || semanaID === 'Semana_ID' || semanaID === 'NO_HEADER') continue;
-    const col1 = (row[0]||'').replace(/['"]/g,'').trim();
-    const col2 = (row[1]||'').replace(/['"]/g,'').trim();
-    if (!col1 && !col2) continue;
+    const col0 = limpiar(row[0]||'');
+    const col1 = limpiar(row[1]||'');
+    const col2 = limpiar(row[2]||'');
+    const col3 = limpiar(row[3]||'');
 
-    const monMatch = semanaID.match(/(\d{1,2})[^\d]+(\w+)[^\d]+(\d{4})/i);
-    if (!monMatch) continue;
-    const meses = {enero:1,febrero:2,marzo:3,abril:4,mayo:5,junio:6,julio:7,agosto:8,septiembre:9,octubre:10,noviembre:11,diciembre:12};
-    const mes = meses[monMatch[2].toLowerCase()];
-    if (!mes) continue;
-    const monKey = `${monMatch[3]}-${String(mes).padStart(2,'0')}-${monMatch[1].padStart(2,'0')}`;
-    const monDate = getMondayOf(new Date(monKey));
-    const key = toISO(monDate);
-
-    if (!map[key]) map[key] = {semana: key, salaAux:'', partes:[]};
-    if (col1.toLowerCase().includes('sala auxiliar')) {
-      map[key].salaAux = col2;
-    } else if (col2) {
-      map[key].partes.push({rol: col1, quien: col2});
+    // Sala auxiliar global (antes de la primera semana)
+    if (col0.toLowerCase().startsWith('sala auxiliar')) {
+      salaAuxGlobal = col1 || col0.replace(/sala auxiliar\s*:\s*/i,'').trim();
+      continue;
     }
+
+    // Nueva semana detectada por col3 o col0 que empieza con "Semana del"
+    const semanaStr = col3.toLowerCase().includes('semana del') ? col3 : (col0.toLowerCase().includes('semana del') ? col0 : '');
+    if (semanaStr) {
+      const m = semanaStr.match(/semana del\s+(\d+)[^\d]+(\w+)[^\d]+(\d{4})/i);
+      if (m) {
+        const mes = meses[m[2].toLowerCase()];
+        if (mes) {
+          const fechaStr = `${m[3]}-${String(mes).padStart(2,'0')}-${m[1].padStart(2,'0')}T12:00:00`;
+          currentKey = toISO(getMondayOf(new Date(fechaStr)));
+          if (!map[currentKey]) map[currentKey] = {semana: currentKey, salaAux: salaAuxGlobal, partes:[]};
+        }
+      }
+      if (col0.toLowerCase().includes('semana')) continue;
+    }
+
+    if (!currentKey) continue;
+    if (!col0) continue;
+    if (col0 === 'Reuni\u00f3n Vida y Ministerio Cristianos') continue;
+    if (col0 === 'Semana_ID') continue;
+    if (col0.toLowerCase().includes('tesoros de la b')) continue;
+    if (col0.toLowerCase().includes('seamos mejores')) continue;
+    if (col0.toLowerCase().includes('nuestra vida cristiana')) continue;
+    if (col0.toLowerCase().startsWith('sala auxiliar')) { map[currentKey].salaAux = col1 || col0.replace(/sala auxiliar\s*:\s*/i,'').trim(); continue; }
+    if (col1.toLowerCase() === 'sala principal') continue;
+
+    let quien = col1;
+    if (col2 && col2.toLowerCase() !== 'sala auxiliar') {
+      quien = col1 ? `${col1} \u00b7 ${col2}` : col2;
+    }
+    if (!quien) continue;
+    map[currentKey].partes.push({rol: col0, quien});
   }
+
   const nuevas = Object.values(map).filter(r => r.partes.length > 0);
   if (nuevas.length > 0) reuniones = nuevas;
 }
