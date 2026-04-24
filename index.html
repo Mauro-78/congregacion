@@ -7,7 +7,7 @@
 <meta name="apple-mobile-web-app-status-bar-style" content="default">
 <meta name="apple-mobile-web-app-title" content="Congregación">
 <meta name="theme-color" content="#4a6fa5">
-<title>Programa Semanal — Congregación Sur Santa Rosa</title>
+<title>Programa Semanal — Congregación</title>
 <style>
 :root {
   --bg: #f0f4fb;
@@ -355,6 +355,22 @@ const SHEET_IDS = {
   reunion:   '1LrRsXxNKZxwqb908HbCD67YymjBEVv24FrHocPNtZUw'
 };
 
+// GIDs de cada pestaña mensual de la planilla de Reunión
+const REUNION_GIDS = [
+  1638672646, // Enero
+  527122826,  // Febrero
+  1459977374, // Marzo
+  854931328,  // Abril
+  289738399,  // Mayo
+  1069712086, // Junio
+  390319481,  // Julio
+  116022169,  // Agosto
+  44825787,   // Septiembre
+  715704529,  // Octubre
+  1574222564, // Noviembre
+  1173193193, // Diciembre
+];
+
 // ---- DATOS LOCALES (respaldo si no hay internet) ----
 let discursos = [
   {d:"2026-01-03", titulo:"Como nos beneficia la sabiduría divina", conf:"Pablo Becker — Sur G.Pico — Conf N°194", salen:"Mauro Tobares Conf N°87 G.Acha / N.Fernandez N°178 Realicó"},
@@ -455,25 +471,34 @@ async function actualizarDesdeDrive() {
   icon.innerHTML = '<span class="spin">↻</span>';
   showToast('Consultando planillas...');
 
-  const urls = [
-    `https://docs.google.com/spreadsheets/d/${SHEET_IDS.discursos}/export?format=csv&gid=1106218078`,
-    `https://docs.google.com/spreadsheets/d/${SHEET_IDS.turnos}/export?format=csv&gid=0`,
-    `https://docs.google.com/spreadsheets/d/${SHEET_IDS.reunion}/export?format=csv&gid=854931328`,
-  ];
+  const fetchCSV = (url) => fetch(url, {cache: 'no-store'})
+    .then(r => { if(!r.ok) throw new Error('HTTP ' + r.status); return r.text(); });
+
+  const urlDiscursos = `https://docs.google.com/spreadsheets/d/${SHEET_IDS.discursos}/export?format=csv&gid=1106218078`;
+  const urlTurnos    = `https://docs.google.com/spreadsheets/d/${SHEET_IDS.turnos}/export?format=csv&gid=0`;
+  const urlsReunion  = REUNION_GIDS.map(gid =>
+    `https://docs.google.com/spreadsheets/d/${SHEET_IDS.reunion}/export?format=csv&gid=${gid}`
+  );
 
   try {
-    const fetchCSV = (url) => fetch(url, {cache: 'no-store'})
-      .then(r => { if(!r.ok) throw new Error('HTTP ' + r.status); return r.text(); });
+    // Descargar discursos y turnos en paralelo
+    const [csv1, csv2] = await Promise.all([
+      fetchCSV(urlDiscursos),
+      fetchCSV(urlTurnos),
+    ]);
 
-    const [csv1, csv2, csv3] = await Promise.all(urls.map(fetchCSV));
-
-    const antesDisc = discursos.length;
-    const antesTurn = turnos.length;
-    const antesReu  = reuniones.length;
+    // Descargar las 12 pestañas de reunión en paralelo
+    const csvsMensuales = await Promise.all(urlsReunion.map(u =>
+      fetchCSV(u).catch(() => '') // si una pestaña falla, devuelve vacío
+    ));
 
     parsearDiscursos(csv1);
     parsearTurnos(csv2);
-    parsearReunion(csv3);
+    // Parsear todas las pestañas y acumular
+    reuniones = [];
+    for (const csv of csvsMensuales) {
+      if (csv) parsearReunion(csv);
+    }
 
     const ahora = new Date().toLocaleTimeString('es-AR', {hour:'2-digit', minute:'2-digit'});
     const info = `Actualizado: ${ahora} | Disc:${discursos.length} Turn:${turnos.length} Reu:${reuniones.length}`;
@@ -631,7 +656,14 @@ function parsearReunion(csv) {
   }
 
   const nuevas = Object.values(map).filter(r => r.partes.length > 0);
-  if (nuevas.length > 0) reuniones = nuevas;
+  if (nuevas.length > 0) {
+    // Acumular: agregar solo semanas que no existan ya
+    for (const r of nuevas) {
+      if (!reuniones.find(x => x.semana === r.semana)) {
+        reuniones.push(r);
+      }
+    }
+  }
 }
 
 // ---- NAVEGACIÓN ----
