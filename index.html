@@ -462,18 +462,27 @@ async function actualizarDesdeDrive() {
   ];
 
   try {
-    const [csv1, csv2, csv3] = await Promise.all(urls.map(u =>
-      fetch(u).then(r => { if(!r.ok) throw new Error('No se pudo acceder'); return r.text(); })
-    ));
+    const fetchCSV = (url) => fetch(url, {cache: 'no-store'})
+      .then(r => { if(!r.ok) throw new Error('HTTP ' + r.status); return r.text(); });
+
+    const [csv1, csv2, csv3] = await Promise.all(urls.map(fetchCSV));
+
+    const antesDisc = discursos.length;
+    const antesTurn = turnos.length;
+    const antesReu  = reuniones.length;
+
     parsearDiscursos(csv1);
     parsearTurnos(csv2);
     parsearReunion(csv3);
+
     const ahora = new Date().toLocaleTimeString('es-AR', {hour:'2-digit', minute:'2-digit'});
-    document.getElementById('update-info').textContent = `Última actualización: ${ahora}`;
-    showToast('✓ Planillas actualizadas');
+    const info = `Actualizado: ${ahora} | Disc:${discursos.length} Turn:${turnos.length} Reu:${reuniones.length}`;
+    document.getElementById('update-info').textContent = info;
+    showToast('\u2713 Planillas actualizadas');
     render();
   } catch(e) {
-    showToast('Sin conexión — usando datos guardados');
+    document.getElementById('update-info').textContent = 'Error: ' + e.message;
+    showToast('Sin conexi\u00f3n \u2014 usando datos guardados');
   }
 
   btn.classList.remove('loading');
@@ -559,45 +568,62 @@ function parsearReunion(csv) {
   let currentKey = null;
   let salaAuxGlobal = '';
 
+  function detectarSemana(str) {
+    const sl = str.toLowerCase();
+    if (!sl.includes('semana del')) return null;
+    // Buscar el mes por nombre
+    let mesNum = null;
+    for (const [nombre, num] of Object.entries(meses)) {
+      if (sl.includes(nombre)) { mesNum = num; break; }
+    }
+    const mDia = sl.match(/del\s+(\d+)/);
+    const mAnio = sl.match(/(\d{4})/);
+    if (!mesNum || !mDia || !mAnio) return null;
+    const fechaStr = `${mAnio[1]}-${String(mesNum).padStart(2,'0')}-${mDia[1].padStart(2,'0')}T12:00:00`;
+    return toISO(getMondayOf(new Date(fechaStr)));
+  }
+
   for (const row of rows) {
     const col0 = limpiar(row[0]||'');
     const col1 = limpiar(row[1]||'');
     const col2 = limpiar(row[2]||'');
     const col3 = limpiar(row[3]||'');
 
-    // Sala auxiliar global (antes de la primera semana)
+    // Sala auxiliar global
     if (col0.toLowerCase().startsWith('sala auxiliar')) {
       salaAuxGlobal = col1 || col0.replace(/sala auxiliar\s*:\s*/i,'').trim();
       continue;
     }
 
-    // Nueva semana detectada por col3 o col0 que empieza con "Semana del"
-    const semanaStr = col3.toLowerCase().includes('semana del') ? col3 : (col0.toLowerCase().includes('semana del') ? col0 : '');
+    // Detectar nueva semana en col3 o col0
+    const semanaStr = col3.toLowerCase().includes('semana del') ? col3 :
+                      col0.toLowerCase().includes('semana del') ? col0 : '';
     if (semanaStr) {
-      const m = semanaStr.match(/semana del\s+(\d+)[^\d]+(\w+)[^\d]+(\d{4})/i);
-      if (m) {
-        const mes = meses[m[2].toLowerCase()];
-        if (mes) {
-          const fechaStr = `${m[3]}-${String(mes).padStart(2,'0')}-${m[1].padStart(2,'0')}T12:00:00`;
-          currentKey = toISO(getMondayOf(new Date(fechaStr)));
-          if (!map[currentKey]) map[currentKey] = {semana: currentKey, salaAux: salaAuxGlobal, partes:[]};
-        }
+      const key = detectarSemana(semanaStr);
+      if (key) {
+        currentKey = key;
+        if (!map[currentKey]) map[currentKey] = {semana: currentKey, salaAux: salaAuxGlobal, partes:[]};
       }
-      if (col0.toLowerCase().includes('semana')) continue;
+      if (col0.toLowerCase().includes('semana del')) continue;
     }
 
     if (!currentKey) continue;
     if (!col0) continue;
-    if (col0 === 'Reuni\u00f3n Vida y Ministerio Cristianos') continue;
+    const c0l = col0.toLowerCase();
+    if (c0l.includes('reuni') && c0l.includes('ministerio')) continue;
     if (col0 === 'Semana_ID') continue;
-    if (col0.toLowerCase().includes('tesoros de la b')) continue;
-    if (col0.toLowerCase().includes('seamos mejores')) continue;
-    if (col0.toLowerCase().includes('nuestra vida cristiana')) continue;
-    if (col0.toLowerCase().startsWith('sala auxiliar')) { map[currentKey].salaAux = col1 || col0.replace(/sala auxiliar\s*:\s*/i,'').trim(); continue; }
+    if (c0l.includes('tesoros de la b')) continue;
+    if (c0l.includes('seamos mejores')) continue;
+    if (c0l.includes('nuestra vida cristiana')) continue;
+    if (c0l.startsWith('sala auxiliar')) {
+      map[currentKey].salaAux = col1 || col0.replace(/sala auxiliar\s*:\s*/i,'').trim();
+      continue;
+    }
     if (col1.toLowerCase() === 'sala principal') continue;
 
+    // Construir quien: principal · auxiliar
     let quien = col1;
-    if (col2 && col2.toLowerCase() !== 'sala auxiliar') {
+    if (col2 && col2.toLowerCase() !== 'sala auxiliar' && col2 !== '') {
       quien = col1 ? `${col1} \u00b7 ${col2}` : col2;
     }
     if (!quien) continue;
